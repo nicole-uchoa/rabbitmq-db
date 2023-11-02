@@ -12,11 +12,12 @@ from logging.config import dictConfig
 
 dictConfig(log_config)
 
+
 def main():
     # Configuração da conexão RabbitMQ
-    credentials = pika.PlainCredentials('guest', 'guest') 
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials) 
-    connection = pika.BlockingConnection(parameters) 
+    credentials = pika.PlainCredentials('guest', 'guest')
+    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
+    connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     # Defina a fila que você deseja consumir
     queue = 'fila_api'
@@ -33,9 +34,11 @@ def main():
                     cursor.execute(query)
                     # Pega o retorno da query
                     dados = cursor.fetchall()
-                    print("RESPOSTA: " + dados)
+                    print("RESPOSTA: " + str(dados))
                 except Exception as e:
-                    print(e)
+                    print(f"ERRO no método GET \n Descrição erro: {e}")
+                    cursor.close()
+                    return
             else:
                 try:
                     cursor.execute(query)
@@ -43,26 +46,33 @@ def main():
                     if dados == -1:
                         print("RESPOSTA: Dados de input inválidos")
                     else:
-                        print("RESPOSTA: linhas alteradas: " + dados)
+                        print("RESPOSTA: linhas alteradas: " + str(dados))
+
                 except Exception as e:
-                    print(e)
+                    print(f"ERRO no método {metodo} \n Descrição erro: {e}")
+                    cursor.close()
+                    return
             db_conn.commit()
             cursor.close()
-            print(f" [x] Mensagem recebida e armazenada no banco de dados: {data}")
+            print(
+                f" [x] Mensagem recebida e executada no banco de dados: {data}")
         except Exception as e:
-            print(f"Erro ao processar a mensagem: {e}")
+            print(f"ERRO AO PROCESSAR MENSAGEM: {e}")
 
-    channel.basic_consume(queue='fila_api', on_message_callback=callback, auto_ack=True) 
-    print(' [*] Waiting for messages. To exit press CTRL+C') 
-    channel.start_consuming() 
+    channel.basic_consume(
+        queue='fila_api', on_message_callback=callback, auto_ack=True)
+    print(' [*] Waiting for messages. To exit press CTRL+C')
+    channel.start_consuming()
+
 
 def get_data(body):
-    # pegar dados da mensagem 
+    # pegar dados da mensagem
     data = body.decode('utf-8')
     data = json.loads(data)
     query = data.get("query")
     metodo = data.get('metodo')
     return metodo, query, data
+
 
 def connect_db():
     # Configuração da conexão PostgreSQL
@@ -75,6 +85,7 @@ def connect_db():
     )
     return db_conn
 
+
 if __name__ == '__main__':
     try:
         main()
@@ -86,4 +97,3 @@ if __name__ == '__main__':
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-

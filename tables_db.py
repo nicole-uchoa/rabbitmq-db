@@ -19,5 +19,5 @@ class Curso(BaseModel):
 
 
 class CursoAluno(BaseModel):
-    idCurso : int
-    idAluno : int
+    id_curso : int
+    id_aluno : int

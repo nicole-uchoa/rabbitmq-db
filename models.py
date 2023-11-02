@@ -46,8 +46,8 @@ class Curso(Base):
 
 class CursoAluno(Base):
     __tablename__ = 'cursoaluno'
-    idCurso = Column(Integer, ForeignKey('curso.id'), primary_key=True)
-    idAluno = Column(Integer, ForeignKey('aluno.id'), primary_key=True)
+    id_curso = Column(Integer, ForeignKey('curso.id'), primary_key=True)
+    id_aluno = Column(Integer, ForeignKey('aluno.id'), primary_key=True)
     curso = relationship(Curso)
     aluno = relationship(Aluno)
 
